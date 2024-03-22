@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.wait import WebDriverWait
 from webdrivermanager.chrome import ChromeDriverManager
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
@@ -44,35 +46,45 @@ def navigateToProf(driver: webdriver.Chrome, username) -> bool:
 
 #TODO: COUNT_ALL
 def count_all(driver:webdriver.Chrome, username:str):
-    followers = None
-    following = None
-    if (driver.current_url == ("https://www.instagram.com/" + username + "/")):
-        followers = get_followers(driver)
-    if (driver.current_url == ("https://www.instagram.com/" + username + "/")):
-        following = get_following(driver)
-    if (followers == None | following == None):
-        return False
-    else:
-        return True
+    driver.get("https://www.instagram.com/" + username + "/followers")
+    followers = navigate_users(driver)
+    print(followers)
+    print("AT FOLLOWERS")
+    time.sleep(50)
 
-#TODO: GET_FOLLOWERS
-def get_followers(driver: webdriver.Chrome):
-    followers = []
-    driver.find_elements()
-    return followers
+    driver.get("https://www.instagram.com/" + username + "/following")
+    print("AT FOLLOWING")
+    #following = navigate_users()
+    time.sleep(10)
 
-#TODO: GET_FOLLOWING
-def get_following(driver: webdriver.Chrome):
-    following = []
 
-    return following
 
+#TODO: NAVIGATE_USERS
+def navigate_users(driver:webdriver.Chrome, ):
+    list_xpath ="//div[@role='dialog']//li"
+    WebDriverWait(driver, 20).until(
+    EC.presence_of_element_located((By.XPATH, list_xpath)))
+
+    #scroll_down(driver)
+
+    list_elems = driver.find_elements_by_xpath(list_xpath)
+    users = []
+
+    for i in range(len(list_elems)):
+        try:
+            row_text = list_elems[i].text
+            if ("Follow" in row_text):
+                username = row_text[:row_text.index("\n")]
+                users += [username]
+        except:
+            print("continue")
+    return users
 
 def __main__():
     print("Enter Username: ")
-    username = input()
+    username = 'alex.zieba' #input()
     print("Enter Password: ")
-    password = input()
+    password = 'N3m032504' #input()
     driver = webdriver.Chrome()
     driver.get('https://www.instagram.com/accounts/login/')
     logged = login(driver,username,password)
@@ -82,9 +94,10 @@ def __main__():
     navd = navigateToProf(driver, username)
     if (navd):
         print("MADE IT TO PROFILE")
-    #count_all(driver, username)
-        
+    time.sleep(5)
+    count_all(driver, username)    
     print("SUCCESS")
+    time.sleep(5)
     driver.quit()
     return
 
